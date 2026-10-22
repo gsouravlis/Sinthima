@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Senior Year College &amp; Financial Aid Visual Roadmap</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Hero / Header -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-top">
+        <div>
+          <span class="badge-pill">High School Senior Parent Guide</span>
+          <h1>College Application &amp; Financial Aid Roadmap</h1>
+          <p>
+            No walls of text—just the critical dates, visual financial aid breakdowns,
+            FAFSA traps to avoid, and interactive checklists for parents and seniors.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="btn-print" class="btn btn-light" type="button">
+            🖨️ Print / Save PDF Checklist
+          </button>
+          <button id="btn-reset" class="btn btn-outline-light" type="button">
+            ↺ Reset Checkboxes
+          </button>
+        </div>
+      </div>
+
+      <!-- Overall Progress Tracker -->
+      <div class="progress-banner">
+        <div class="progress-info">
+          <div id="progress-count" class="progress-count">0 / 15</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-label-row">
+              <span>Family Checklist Progress (Saved automatically on this device)</span>
+              <strong id="progress-pct">0% Complete</strong>
+            </div>
+            <div class="progress-track">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Filter & View Navigation -->
+  <nav class="sticky-nav">
+    <div class="container nav-inner">
+      <div class="view-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="all" type="button">All Sections</button>
+        <button class="tab-btn" data-tab="timeline" type="button">📅 Timeline &amp; Checklists</button>
+        <button class="tab-btn" data-tab="aid" type="button">💰 Financial Aid &amp; FAFSA</button>
+        <button class="tab-btn" data-tab="strategy" type="button">🎯 Admissions Strategy</button>
+      </div>
+
+      <div class="role-filter">
+        <span>Filter Tasks:</span>
+        <button class="role-chip active" data-role="all" type="button">Everyone</button>
+        <button class="role-chip" data-role="parent" type="button">Parent Tasks</button>
+        <button class="role-chip" data-role="student" type="button">Student Tasks</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- SECTION 1: TIMELINE & SEASONAL CHECKLISTS -->
+    <section class="section-block" data-section="timeline">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">📅 Key Deadlines &amp; Seasonal Action Checklist</h2>
+          <p class="section-subtitle">
+            Critical dates from September through May—check off items as your family completes them.
+          </p>
+        </div>
+      </div>
+
+      <!-- 4 Big Dates Spotlight Strip -->
+      <div class="key-dates-strip">
+        <div class="date-spotlight">
+          <div class="date-badge">Financial Aid Opens</div>
+          <div class="date-value">October 1</div>
+          <div class="date-desc">
+            FAFSA (<a href="https://studentaid.gov" target="_blank" rel="noopener">studentaid.gov</a>)
+            &amp; NYS TAP (<a href="https://www.hesc.ny.gov" target="_blank" rel="noopener">hesc.ny.gov</a>) open. Create FSA IDs early!
+          </div>
+        </div>
+
+        <div class="date-spotlight free">
+          <div class="date-badge">Application Fee Waiver</div>
+          <div class="date-value">Oct 19 – Nov 2</div>
+          <div class="date-desc">
+            <strong>SUNY Free Week:</strong> Apply to SUNY schools during this window with waived application fees.
+          </div>
+        </div>
+
+        <div class="date-spotlight urgent">
+          <div class="date-badge">Financial Aid Deadline</div>
+          <div class="date-value">February 1</div>
+          <div class="date-desc">
+            <strong>FAFSA Deadline:</strong> Ensure both Student and Parent ("Contributor") sections are signed.
+          </div>
+        </div>
+
+        <div class="date-spotlight decision">
+          <div class="date-badge">National Decision Day</div>
+          <div class="date-value">May 1</div>
+          <div class="date-desc">
+            Final deadline to choose your college and submit tuition &amp; housing deposits after comparing aid packages.
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Seasonal Columns -->
+      <div class="timeline-grid">
+        <!-- Fall -->
+        <div class="season-card season-fall">
+          <div class="season-header">
+            <span class="season-title">🍂 Sept – Dec: Apply &amp; Launch Aid</span>
+            <span class="season-tag">Fall Senior Year</span>
+          </div>
+          <div id="list-fall" class="checklist-items"></div>
+        </div>
+
+        <!-- Winter -->
+        <div class="season-card season-winter">
+          <div class="season-header">
+            <span class="season-title">❄️ Jan – Mar: Aid Deadlines &amp; Offers</span>
+            <span class="season-tag">Winter Senior Year</span>
+          </div>
+          <div id="list-winter" class="checklist-items"></div>
+        </div>
+
+        <!-- Spring -->
+        <div class="season-card season-spring">
+          <div class="season-header">
+            <span class="season-title">🌱 Apr – May: Compare &amp; Commit</span>
+            <span class="season-tag">Spring Senior Year</span>
+          </div>
+          <div id="list-spring" class="checklist-items"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: FINANCIAL AID VISUAL BREAKDOWN & FAFSA GOTCHAS -->
+    <section class="section-block" data-section="aid">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">💰 Financial Aid Visual Breakdown</h2>
+          <p class="section-subtitle">
+            When financial aid packages arrive (Jan–Mar), they mix three very different types of money together. Here is how to read them:
+          </p>
+        </div>
+      </div>
+
+      <!-- 3-Pillar Aid Comparison -->
+      <div class="aid-pillars">
+        <!-- Pillar 1: Free Money -->
+        <div class="aid-card free-money">
+          <span class="aid-type-pill">1. Free Money (Never Repaid)</span>
+          <h3>Scholarships &amp; Grants</h3>
+          <p class="aid-summary">
+            Reduces your out-of-pocket cost directly. Usually merit-based (scholarships) or need/institutional (grants).
+          </p>
+          <ul class="aid-list">
+            <li>
+              <strong>High School Guidance Office</strong>
+              Ask your counselor early for their list of local &amp; community scholarships.
+            </li>
+            <li>
+              <strong>Departmental &amp; Sibling Scholarships</strong>
+              Check the college's academic department web pages directly, and always ask if the school offers a <em>Sibling Scholarship</em>.
+            </li>
+            <li>
+              <strong>Institutional Grants</strong>
+              Free aid awarded directly by the college itself in your financial aid package.
+            </li>
+            <li>
+              <strong>Federal Pell Grant &amp; NYS TAP</strong>
+              Unlocked by completing the <a href="https://studentaid.gov" target="_blank" rel="noopener">FAFSA</a> and <a href="https://www.hesc.ny.gov" target="_blank" rel="noopener">NYS TAP</a> starting Oct 1.
+            </li>
+          </ul>
+        </div>
+
+        <!-- Pillar 2: Earned Money -->
+        <div class="aid-card earned-money">
+          <span class="aid-type-pill">2. Earned Money (Paycheck)</span>
+          <h3>Federal Work-Study</h3>
+          <p class="aid-summary">
+            Offered to eligible students to work a part-time job on campus and earn a regular paycheck.
+          </p>
+          <ul class="aid-list">
+            <li>
+              <strong>How It Works</strong>
+              Students apply for eligible campus jobs and get paid as they work hours during the semester.
+            </li>
+          </ul>
+          <div class="callout-warning">
+            ⚠️ <strong>Parent Watch-Out:</strong> Work-Study is <strong>NOT applied directly to your tuition bill</strong> upfront! Even if a college lists "$2,500 Work-Study" in your award letter, the student earns that as spending/living money via a paycheck during the year.
+          </div>
+        </div>
+
+        <!-- Pillar 3: Borrowed Money -->
+        <div class="aid-card borrowed-money">
+          <span class="aid-type-pill">3. Borrowed Money (Repaid + Interest)</span>
+          <h3>Federal Student Loans</h3>
+          <p class="aid-summary">
+            Loans must be paid back, and the difference between <em>Subsidized</em> and <em>Unsubsidized</em> saves thousands in interest:
+          </p>
+          <div class="loan-compare">
+            <div class="loan-box loan-sub">
+              <strong>✅ Subsidized Loan</strong>
+              <p style="margin-top:0.3rem;">
+                <strong>No interest while in school.</strong> Interest only starts accruing <em>after</em> graduation. Always accept this before unsubsidized loans if borrowing.
+              </p>
+            </div>
+            <div class="loan-box loan-unsub">
+              <strong>⚠️ Unsubsidized Loan</strong>
+              <p style="margin-top:0.3rem;">
+                <strong>Accrues interest immediately</strong> from day one and throughout all four years of college.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAFSA Contributor Flow & Gotchas -->
+      <div class="fafsa-grid">
+        <div class="flow-card">
+          <h3>🔄 How the FAFSA "Contributor" Process Works</h3>
+          <p class="aid-summary" style="margin-top:0.25rem;">
+            You must complete the FAFSA <strong>every year</strong>. Parents are now called "Contributors" and have their own separate login.
+          </p>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="step-num">1</div>
+              <div>
+                <strong>Both Create FSA IDs Early (<a href="https://studentaid.gov" target="_blank" rel="noopener">studentaid.gov</a>)</strong>
+                <div class="task-note">Student and Parent each need their own separate FSA ID. Do this early—SSA verification takes days.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="step-num">2</div>
+              <div>
+                <strong>Student Starts the Form &amp; Invites Parent</strong>
+                <div class="task-note">Make sure the <strong>student</strong> is listed as the applicant (not the parent). The student enters parent info to send an invite.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="step-num">3</div>
+              <div>
+                <strong>Parent Accepts "Contributor" Email Invite</strong>
+                <div class="task-note">Parent receives an email invite, logs in with their own FSA ID, and completes the parent financial section.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="step-num">4</div>
+              <div>
+                <strong>Verify BOTH Signatures Went Through</strong>
+                <div class="task-note">Double-check that both the student and parent signed and that the submission status reads complete.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="helpline-banner">
+            <span>📞 Stuck on FAFSA or FSA ID verification? Ask for help:</span>
+            <span class="helpline-number">1-800-4-FED-AID (1-800-433-3243)</span>
+          </div>
+        </div>
+
+        <!-- FAFSA Gotchas Checklist -->
+        <div class="gotchas-card">
+          <h3>🚩 FAFSA "Gotchas" Double-Check</h3>
+          <p class="aid-summary" style="margin-top:0.25rem;">
+            Check off these 4 common traps while filling out your financial aid forms so your application doesn't get rejected or delayed:
+          </p>
+          <div id="list-gotchas" class="checklist-items" style="padding:0;"></div>
+        </div>
+      </div>
+
+      <!-- Trusted Scholarship & Aid Links -->
+      <div class="resource-bar">
+        <a class="resource-link" href="https://studentaid.gov" target="_blank" rel="noopener">🔗 studentaid.gov (FAFSA)</a>
+        <a class="resource-link" href="https://www.hesc.ny.gov" target="_blank" rel="noopener">🔗 hesc.ny.gov (NYS TAP)</a>
+        <a class="resource-link" href="https://finaid.org" target="_blank" rel="noopener">🔗 finaid.org</a>
+        <a class="resource-link" href="https://www.fastweb.com" target="_blank" rel="noopener">🔗 fastweb.com</a>
+        <a class="resource-link" href="https://www.scholarships.com" target="_blank" rel="noopener">🔗 scholarships.com</a>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ADMISSIONS STRATEGY & INSIDER TIPS -->
+    <section class="section-block" data-section="strategy">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🎯 Admissions Strategy &amp; Insider Tips</h2>
+          <p class="section-subtitle">
+            Key strategies from counselor meetings to strengthen applications and avoid post-graduation surprises.
+          </p>
+        </div>
+      </div>
+
+      <div class="strategy-grid">
+        <!-- Strategy 1: Common Data Set -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">📊</div>
+            <h3>The "Common Data Set" Lookup Trick</h3>
+            <p>
+              Want to see a college's <strong>real admission statistics</strong>, percentage of students applying vs. admitted, what they value most, and exact test score percentiles? Search the college's name plus <em>"Common Data Set"</em>.
+            </p>
+          </div>
+          <form id="cds-form" class="cds-lookup-box">
+            <label for="cds-college-input" style="font-size:0.8rem;font-weight:700;color:var(--text-main);">
+              Try it now — look up any college's Common Data Set:
+            </label>
+            <div class="cds-input-row">
+              <input
+                id="cds-college-input"
+                class="cds-input"
+                type="text"
+                placeholder="e.g. SUNY Binghamton, Cornell, NYU..."
+              />
+              <button class="btn-primary" type="submit">Search Stats ↗</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Strategy 2: Demonstrated Interest -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">✉️</div>
+            <h3>Show "Demonstrated Interest" (Especially Reach Schools)</h3>
+            <p>
+              Colleges track whether a student genuinely wants to attend. Have the student <strong>email universities thank-you notes</strong> after campus visits, college fairs, virtual sessions, or rep visits—<strong>especially if it is a reach school</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Strategy 3: Test-Optional Rule -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">📝</div>
+            <h3>Test-Optional Strategy</h3>
+            <p>
+              <strong>Do not submit SAT/ACT scores if test scores are optional</strong> unless the score strengthens the application. Check the school's <em>Common Data Set</em> first to see if your student's score is at or above their admitted 50th percentile.
+            </p>
+          </div>
+        </div>
+
+        <!-- Strategy 4: The 650-Word Essay -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">✍️</div>
+            <h3>College Essay: Show Personal Growth (≤ 650 Words)</h3>
+            <p>
+              Admissions officers already have the transcript and activity list. The goal of the Common App essay (<strong>maximum of 650 words</strong>) is to show <strong>how the student has grown as a person</strong> through reflection and self-awareness.
+            </p>
+          </div>
+        </div>
+
+        <!-- Strategy 5: Interviews -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">🗣️</div>
+            <h3>Take the Optional Interview (When It Fits)</h3>
+            <p>
+              Depending on the student, <strong>take the interview option if it is available</strong>. It's a great way for conversational students to add personality to their file and reinforce demonstrated interest.
+            </p>
+          </div>
+        </div>
+
+        <!-- Strategy 6: High School Email Deactivation -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">📧</div>
+            <h3>High School Email Deactivation Trap</h3>
+            <p>
+              <strong>Make note of when the student's high school email is deactivated after graduation!</strong> Never tie FAFSA (`studentaid.gov`), Common App, or college housing portals solely to a school email address that will shut off in the summer.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
