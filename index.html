@@ -32,7 +32,7 @@
       <!-- Overall Progress Tracker -->
       <div class="progress-banner">
         <div class="progress-info">
-          <div id="progress-count" class="progress-count">0 / 15</div>
+          <div id="progress-count" class="progress-count">0 / 17</div>
           <div class="progress-bar-wrap">
             <div class="progress-label-row">
               <span>Family Checklist Progress (Saved automatically on this device)</span>
@@ -53,6 +53,7 @@
       <div class="view-tabs" role="tablist">
         <button class="tab-btn active" data-tab="all" type="button">All Sections</button>
         <button class="tab-btn" data-tab="timeline" type="button">📅 Timeline &amp; Checklists</button>
+        <button class="tab-btn" data-tab="planner" type="button">🏫 College Planner</button>
         <button class="tab-btn" data-tab="aid" type="button">💰 Financial Aid &amp; FAFSA</button>
         <button class="tab-btn" data-tab="strategy" type="button">🎯 Admissions Strategy</button>
       </div>
@@ -93,7 +94,7 @@
           <div class="date-badge">Application Fee Waiver</div>
           <div class="date-value">Oct 19 – Nov 2</div>
           <div class="date-desc">
-            <strong>SUNY Free Week:</strong> Apply to SUNY schools during this window with waived application fees.
+            <strong>SUNY Free Week:</strong> Apply to SUNY schools with waived fees (<a href="https://www.suny.edu/attend/find-a-suny-campus/" target="_blank" rel="noopener">Find a SUNY campus</a>).
           </div>
         </div>
 
@@ -145,7 +146,104 @@
       </div>
     </section>
 
-    <!-- SECTION 2: FINANCIAL AID VISUAL BREAKDOWN & FAFSA GOTCHAS -->
+    <!-- SECTION 2: INTERACTIVE COLLEGE PLANNING & APPLICATION TRACKER -->
+    <section class="section-block" data-section="planner">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🏫 Interactive College Planning &amp; Application Tracker</h2>
+          <p class="section-subtitle">
+            Track rankings, deadlines, Safety/Target/Reach balance, demonstrated interest, and estimated costs—or import/export directly with Google Sheets.
+          </p>
+        </div>
+        <div class="planner-header-actions">
+          <button id="btn-add-college" class="btn btn-primary" type="button">
+            + Add College
+          </button>
+          <button id="btn-open-import" class="btn btn-secondary" type="button">
+            📋 Paste / Import Google Sheet
+          </button>
+          <button id="btn-export-csv" class="btn btn-secondary" type="button">
+            📥 Export CSV
+          </button>
+          <button id="btn-reset-colleges" class="btn btn-ghost" type="button" title="Restore sample college list">
+            ↺ Reset Sample
+          </button>
+        </div>
+      </div>
+
+      <!-- Portfolio Summary Bar -->
+      <div class="planner-summary-grid">
+        <div class="planner-stat-card">
+          <div class="date-badge">Application Progress</div>
+          <div id="stat-apps-count" class="date-value">3 Schools</div>
+          <div id="stat-apps-sub" class="date-desc">2 Submitted · 1 Pending</div>
+        </div>
+
+        <div class="planner-stat-card">
+          <div class="date-badge">Safety / Target / Reach Balance</div>
+          <div id="stat-tier-balance" class="date-value">1 Safe · 1 Target · 1 Reach</div>
+          <div class="date-desc">Balanced across admission tiers</div>
+        </div>
+
+        <div class="planner-stat-card">
+          <div class="date-badge">App Fees &amp; Est. Cost Range</div>
+          <div id="stat-fee-summary" class="date-value">$65 Total Fees</div>
+          <div id="stat-cost-range" class="date-desc">2 Free Waivers · $23k–$54k/yr est.</div>
+        </div>
+
+        <div class="planner-stat-card interest-watch">
+          <div class="date-badge">Demonstrated Interest Watch</div>
+          <div id="stat-interest-count" class="date-value">1 School Considers It</div>
+          <div id="stat-interest-desc" class="date-desc">Check Common Data Set Section C7</div>
+        </div>
+      </div>
+
+      <!-- Filter & Sort Bar -->
+      <div class="planner-toolbar">
+        <div class="tier-filters">
+          <span class="toolbar-label">Show:</span>
+          <button class="role-chip active" data-tier-filter="all" type="button">All Schools</button>
+          <button class="role-chip" data-tier-filter="safe" type="button">🟢 Safety</button>
+          <button class="role-chip" data-tier-filter="target" type="button">🔵 Target</button>
+          <button class="role-chip" data-tier-filter="reach" type="button">🟣 Reach</button>
+          <button class="role-chip" data-tier-filter="interest" type="button">✉️ Tracks Interest</button>
+        </div>
+
+        <div class="planner-sort">
+          <label for="college-sort-select" class="toolbar-label">Sort by:</label>
+          <select id="college-sort-select" class="planner-select">
+            <option value="rank">Student Rank (1 → 10)</option>
+            <option value="due">Application Due Date</option>
+            <option value="cost-asc">Estimated Cost (Low → High)</option>
+            <option value="cost-desc">Estimated Cost (High → Low)</option>
+            <option value="name">School Name (A → Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Responsive College Planner Table -->
+      <div class="planner-table-wrap">
+        <table class="planner-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>School &amp; Location</th>
+              <th>Tier</th>
+              <th>Due Date &amp; Type</th>
+              <th>Status / Submitted</th>
+              <th>Requirements</th>
+              <th>Demonstrated Interest</th>
+              <th>Fee &amp; Est. Cost</th>
+              <th>Outcome</th>
+              <th class="no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="college-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 3: FINANCIAL AID VISUAL BREAKDOWN & FAFSA GOTCHAS -->
     <section class="section-block" data-section="aid">
       <div class="section-header">
         <div>
@@ -271,11 +369,11 @@
           </div>
         </div>
 
-        <!-- FAFSA Gotchas Checklist -->
+        <!-- FAFSA & Application Gotchas Checklist -->
         <div class="gotchas-card">
-          <h3>🚩 FAFSA "Gotchas" Double-Check</h3>
+          <h3>🚩 FAFSA &amp; Application "Gotchas" Double-Check</h3>
           <p class="aid-summary" style="margin-top:0.25rem;">
-            Check off these 4 common traps while filling out your financial aid forms so your application doesn't get rejected or delayed:
+            Check off these 6 common traps while submitting applications and financial aid forms so nothing gets delayed or rejected:
           </p>
           <div id="list-gotchas" class="checklist-items" style="padding:0;"></div>
         </div>
@@ -285,6 +383,7 @@
       <div class="resource-bar">
         <a class="resource-link" href="https://studentaid.gov" target="_blank" rel="noopener">🔗 studentaid.gov (FAFSA)</a>
         <a class="resource-link" href="https://www.hesc.ny.gov" target="_blank" rel="noopener">🔗 hesc.ny.gov (NYS TAP)</a>
+        <a class="resource-link" href="https://www.suny.edu/attend/find-a-suny-campus/" target="_blank" rel="noopener">🔗 Find a SUNY Campus</a>
         <a class="resource-link" href="https://finaid.org" target="_blank" rel="noopener">🔗 finaid.org</a>
         <a class="resource-link" href="https://www.fastweb.com" target="_blank" rel="noopener">🔗 fastweb.com</a>
         <a class="resource-link" href="https://www.scholarships.com" target="_blank" rel="noopener">🔗 scholarships.com</a>
@@ -297,8 +396,53 @@
         <div>
           <h2 class="section-title">🎯 Admissions Strategy &amp; Insider Tips</h2>
           <p class="section-subtitle">
-            Key strategies from counselor meetings to strengthen applications and avoid post-graduation surprises.
+            Key definitions and strategies from counselor meetings to strengthen applications and avoid common traps.
           </p>
+        </div>
+      </div>
+
+      <!-- Early Action vs. Early Decision Visual Comparison -->
+      <div class="ea-ed-grid">
+        <div class="ea-ed-card ea-card">
+          <div class="ea-ed-top">
+            <span class="aid-type-pill">Non-Binding (Flexible)</span>
+            <span class="season-tag">Typical Deadline: Nov 1 – Nov 15</span>
+          </div>
+          <h3>⚡ Early Action (EA)</h3>
+          <p class="aid-summary">
+            Students apply early in the fall and receive an admission decision early (usually Dec–Jan), <strong>without any obligation to attend</strong>.
+          </p>
+          <ul class="aid-list">
+            <li>
+              <strong>Can apply to multiple schools</strong>
+              Students are free to apply Early Action to multiple colleges (unless a school specifies "Restrictive/Single-Choice Early Action").
+            </li>
+            <li>
+              <strong>Compare Financial Aid Offers until May 1</strong>
+              You do not have to commit until the May 1st deadline, allowing families to compare financial aid packages across all accepted schools.
+            </li>
+          </ul>
+        </div>
+
+        <div class="ea-ed-card ed-card">
+          <div class="ea-ed-top">
+            <span class="aid-type-pill">Binding Commitment</span>
+            <span class="season-tag">Typical Deadline: Nov 1 – Nov 15</span>
+          </div>
+          <h3>🔒 Early Decision (ED)</h3>
+          <p class="aid-summary">
+            A <strong>binding contract</strong> signed by the student, parent, and high school counselor: if accepted, the student <strong>must attend</strong> and withdraw all other college applications.
+          </p>
+          <ul class="aid-list">
+            <li>
+              <strong>Only ONE Early Decision school allowed</strong>
+              Only use Early Decision if a college is the student's 100% undisputed first choice.
+            </li>
+            <li>
+              <strong>Financial Aid Caution for Parents</strong>
+              Because you commit before seeing offers from other colleges, you cannot easily compare financial aid packages—only apply ED if the school's Net Price Calculator fits your family's budget.
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -382,9 +526,172 @@
             </p>
           </div>
         </div>
+
+        <!-- Strategy 7: Post-Common App School Portals -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">🖥️</div>
+            <h3>Complete Each School's Post-Common App Portal</h3>
+            <p>
+              Submitting on the Common App is often <strong>not the final step</strong>. Many colleges email credentials for their own <strong>additional applicant portal</strong> that must be set up and completed to submit supplemental items and track missing documents.
+            </p>
+          </div>
+        </div>
+
+        <!-- Strategy 8: High School Transcript & Recommendation Deadlines -->
+        <div class="strategy-card">
+          <div>
+            <div class="strategy-icon">⏰</div>
+            <h3>Transcripts &amp; Recommendations: Your Deadline vs. Theirs</h3>
+            <p>
+              <strong>Remind your high school guidance office and teachers early!</strong> Make sure transcripts and letters of recommendation are sent by <strong>your earliest application deadline</strong> (especially Early Action/Decision), not the high school's general internal schedule.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
+
+  <!-- Modal: Add / Edit College -->
+  <div id="college-modal" class="modal-backdrop hidden-section" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-labelledby="college-modal-title">
+      <div class="modal-header">
+        <h3 id="college-modal-title">Add / Edit College</h3>
+        <button id="btn-close-college-modal" class="modal-close" type="button" aria-label="Close">✕</button>
+      </div>
+      <form id="college-form" class="modal-form">
+        <input type="hidden" id="col-id" />
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="col-rank">Student Rank (1 = Top Choice)</label>
+            <input id="col-rank" type="number" min="1" max="50" placeholder="e.g. 1" />
+          </div>
+          <div class="form-field">
+            <label for="col-school">School Name *</label>
+            <input id="col-school" type="text" required placeholder="e.g. SUNY Stony Brook" />
+          </div>
+          <div class="form-field">
+            <label for="col-location">Location</label>
+            <input id="col-location" type="text" placeholder="e.g. Stony Brook, NY" />
+          </div>
+          <div class="form-field">
+            <label for="col-tier">Safe / Target / Reach</label>
+            <select id="col-tier">
+              <option value="Safe">Safe</option>
+              <option value="Safe?">Safe?</option>
+              <option value="Target">Target</option>
+              <option value="Reach">Reach</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="col-due">Application Due Date</label>
+            <input id="col-due" type="text" placeholder="e.g. 11/1/2026" />
+          </div>
+          <div class="form-field">
+            <label for="col-type">Type of Application</label>
+            <select id="col-type">
+              <option value="early action">Early Action</option>
+              <option value="early decision">Early Decision</option>
+              <option value="regular decision">Regular Decision</option>
+              <option value="rolling">Rolling</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="col-submitted">Submitted On (leave blank if pending)</label>
+            <input id="col-submitted" type="text" placeholder="e.g. 10/25/2026" />
+          </div>
+          <div class="form-field">
+            <label for="col-fee">Application Fee</label>
+            <input id="col-fee" type="text" placeholder="e.g. free or $50.00" />
+          </div>
+          <div class="form-field">
+            <label for="col-cost">Estimated Cost / Year</label>
+            <input id="col-cost" type="text" placeholder="e.g. $19,000.00" />
+          </div>
+          <div class="form-field">
+            <label for="col-common-app">Common App?</label>
+            <select id="col-common-app">
+              <option value="YES">YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="col-test-opt">Test Scores Optional?</label>
+            <select id="col-test-opt">
+              <option value="Y">Yes (Y)</option>
+              <option value="N">No (N)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="col-supp-essay">Supplemental Essay Required?</label>
+            <select id="col-supp-essay">
+              <option value="N">No (N)</option>
+              <option value="Y">Yes (Y)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="col-logs-interest">School Tracks Demonstrated Interest?</label>
+            <select id="col-logs-interest">
+              <option value="Not Considered">Not Considered</option>
+              <option value="Considered">Considered</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="col-date-interest">Date Showed Interest / Visit Notes</label>
+            <input id="col-date-interest" type="text" placeholder="e.g. 10/17/2026; visit 11/18/2026" />
+          </div>
+          <div class="form-field">
+            <label for="col-outcome">Outcome / Acceptance</label>
+            <select id="col-outcome">
+              <option value="">Awaiting Decision</option>
+              <option value="Accepted">Accepted 🎉</option>
+              <option value="Deferred">Deferred</option>
+              <option value="Waitlisted">Waitlisted</option>
+              <option value="Denied">Denied</option>
+            </select>
+          </div>
+          <div class="form-field form-field-full">
+            <label for="col-majors">Intended Majors / Notes</label>
+            <input id="col-majors" type="text" placeholder="e.g. Engineering: Civil, Mechanical, Electrical, and Computer Engineering" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-cancel-college" class="btn btn-secondary" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save College</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Paste / Import from Google Sheets or CSV -->
+  <div id="import-modal" class="modal-backdrop hidden-section" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-labelledby="import-modal-title">
+      <div class="modal-header">
+        <h3 id="import-modal-title">📋 Paste from Google Sheets or Import CSV</h3>
+        <button id="btn-close-import-modal" class="modal-close" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="aid-summary">
+          Copy your rows directly from Google Sheets (including or excluding the header row) and paste them below, or upload a <code>.csv</code> / <code>.tsv</code> file.
+          Columns match your sheet: <em>Rank, School, Location, Application Due Date, Type, Submitted On, Common App?, Test Optional, Supp Essay, Outcome, App Fee, Estimated Cost, Safe/Target/Reach, Logs Interest, Date Showed Interest, Majors</em>.
+        </p>
+        <textarea
+          id="import-textarea"
+          class="import-textarea"
+          rows="7"
+          placeholder="Paste rows copied from Google Sheets here..."
+        ></textarea>
+        <div class="import-file-row">
+          <label for="import-file-input" class="toolbar-label">Or choose a CSV/TSV file:</label>
+          <input id="import-file-input" type="file" accept=".csv,.tsv,.txt" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-import" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="btn-confirm-import" class="btn btn-primary" type="button">Import Rows</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
