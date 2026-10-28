@@ -216,6 +216,19 @@ let activeTab = "all";
 let collegesList = [];
 let activeTierFilter = "all";
 let activeSort = "rank";
+let lastModalTrigger = null;
+let toastTimer = null;
+
+function showToast(message) {
+  const toast = document.getElementById("toast-banner");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.remove("hidden-section");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.add("hidden-section");
+  }, 3200);
+}
 
 function loadState() {
   try {
@@ -229,9 +242,9 @@ function loadState() {
 
   try {
     const rawColleges = localStorage.getItem(COLLEGES_STORAGE_KEY);
-    if (rawColleges) {
+    if (rawColleges !== null) {
       const parsed = JSON.parse(rawColleges);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         collegesList = parsed;
         return;
       }
@@ -267,7 +280,13 @@ function parseMoney(val) {
 
 function parseDateValue(val) {
   if (!val) return Number.MAX_SAFE_INTEGER;
-  const t = Date.parse(val);
+  const s = String(val).trim();
+  if (!s || s.toLowerCase() === "rolling") return Number.MAX_SAFE_INTEGER - 1;
+  // If user entered MM/DD without a year (e.g. "11/1"), append current year
+  const withYear = /^\d{1,2}\/\d{1,2}$/.test(s)
+    ? `${s}/${new Date().getFullYear()}`
+    : s;
+  const t = Date.parse(withYear);
   return isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
 }
 
@@ -276,6 +295,20 @@ function normalizeTierCategory(tierStr) {
   if (s.includes("reach")) return "reach";
   if (s.includes("target")) return "target";
   return "safe";
+}
+
+function hasSampleColleges() {
+  return collegesList.some((c) => String(c.id || "").startsWith("col-sample-"));
+}
+
+function updateSampleDataBanner() {
+  const banner = document.getElementById("sample-data-banner");
+  if (!banner) return;
+  if (hasSampleColleges()) {
+    banner.classList.remove("hidden-section");
+  } else {
+    banner.classList.add("hidden-section");
+  }
 }
 
 function updateCollegeSummary() {
@@ -381,6 +414,47 @@ function renderCollegesTable() {
     return normalizeTierCategory(c.tier) === activeTierFilter;
   });
 
+  if (filtered.length === 0) {
+    const emptyTr = document.createElement("tr");
+    const isTotalEmpty = collegesList.length === 0;
+    emptyTr.innerHTML = `
+      <td colspan="10" class="empty-planner-state">
+        <strong>${
+          isTotalEmpty
+            ? "Your College Planner is empty and ready for your family's list!"
+            : "No schools match the current filter."
+        }</strong>
+        <div class="empty-planner-actions">
+          ${
+            isTotalEmpty
+              ? `<button type="button" class="btn btn-primary" id="btn-empty-add">+ Add Your First College</button>
+                 <button type="button" class="btn btn-secondary" id="btn-empty-import">📋 Paste from Google Sheets</button>`
+              : `<button type="button" class="btn btn-secondary" id="btn-empty-show-all">Show All Schools</button>`
+          }
+        </div>
+      </td>
+    `;
+    tbody.appendChild(emptyTr);
+
+    const emptyAdd = document.getElementById("btn-empty-add");
+    if (emptyAdd) emptyAdd.addEventListener("click", () => openCollegeModal(null, emptyAdd));
+    const emptyImp = document.getElementById("btn-empty-import");
+    if (emptyImp) {
+      emptyImp.addEventListener("click", () => {
+        const openImp = document.getElementById("btn-open-import");
+        if (openImp) openImp.click();
+      });
+    }
+    const emptyAll = document.getElementById("btn-empty-show-all");
+    if (emptyAll) {
+      emptyAll.addEventListener("click", () => {
+        const allChip = document.querySelector('[data-tier-filter="all"]');
+        if (allChip) allChip.click();
+      });
+    }
+    return;
+  }
+
   const sorted = [...filtered].sort((a, b) => {
     if (activeSort === "rank") {
       const rA = parseInt(a.rank, 10);
@@ -424,8 +498,12 @@ function renderCollegesTable() {
 
     const isSubmitted = col.submittedOn && col.submittedOn.trim() !== "";
     const statusHtml = isSubmitted
-      ? `<span class="status-submitted">✓ Submitted ${escapeHtml(col.submittedOn)}</span>`
-      : `<span class="status-pending">⏳ Not Submitted</span>`;
+      ? `<button type="button" class="status-submitted status-toggle-btn" data-toggle-submit-id="${escapeHtml(
+          col.id
+        )}" title="Click to mark as pending">✓ Submitted ${escapeHtml(col.submittedOn)}</button>`
+      : `<button type="button" class="status-pending status-toggle-btn" data-toggle-submit-id="${escapeHtml(
+          col.id
+        )}" title="Click to mark submitted today">⏳ Not Submitted</button>`;
 
     const commonAppPill =
       (col.commonApp || "").toUpperCase() === "YES"
@@ -472,33 +550,39 @@ function renderCollegesTable() {
       : `<span>Fee: ${escapeHtml(col.appFee)}</span>`;
 
     tr.innerHTML = `
-      <td>${rankHtml}</td>
-      <td>
-        <div class="school-name-cell">${escapeHtml(col.school)}</div>
-        <div class="school-loc-cell">📍 ${escapeHtml(col.location || "—")}</div>
-        ${majorsHtml}
+      <td data-label="Rank">${rankHtml}</td>
+      <td data-label="School">
+        <div>
+          <div class="school-name-cell">${escapeHtml(col.school)}</div>
+          <div class="school-loc-cell">📍 ${escapeHtml(col.location || "—")}</div>
+          ${majorsHtml}
+        </div>
       </td>
-      <td>
+      <td data-label="Tier">
         <span class="tier-badge ${tierClass}">${escapeHtml(col.tier || "Safe")}</span>
       </td>
-      <td>
-        <div style="font-weight:700;">${escapeHtml(col.dueDate || "—")}</div>
-        <div class="school-loc-cell" style="text-transform:capitalize;">${escapeHtml(col.appType || "")}</div>
+      <td data-label="Due Date">
+        <div>
+          <div style="font-weight:700;">${escapeHtml(col.dueDate || "—")}</div>
+          <div class="school-loc-cell" style="text-transform:capitalize;">${escapeHtml(col.appType || "")}</div>
+        </div>
       </td>
-      <td>${statusHtml}</td>
-      <td>
+      <td data-label="Status">${statusHtml}</td>
+      <td data-label="Requirements">
         <div class="req-pills">
           ${commonAppPill}
           ${testOptPill}
           ${suppPill}
         </div>
       </td>
-      <td>${interestHtml}</td>
-      <td>
-        <div style="font-weight:700;">${escapeHtml(col.estimatedCost || "—")}</div>
-        <div>${feeHtml}</div>
+      <td data-label="Demonstrated Interest"><div>${interestHtml}</div></td>
+      <td data-label="Fee & Est. Cost">
+        <div>
+          <div style="font-weight:700;">${escapeHtml(col.estimatedCost || "—")}</div>
+          <div>${feeHtml}</div>
+        </div>
       </td>
-      <td>
+      <td data-label="Outcome">
         <select class="outcome-select" data-outcome-id="${escapeHtml(col.id)}" aria-label="Outcome for ${escapeHtml(col.school)}">
           <option value="" ${!col.outcome ? "selected" : ""}>Awaiting</option>
           <option value="Accepted" ${col.outcome === "Accepted" ? "selected" : ""}>Accepted 🎉</option>
@@ -507,15 +591,34 @@ function renderCollegesTable() {
           <option value="Denied" ${col.outcome === "Denied" ? "selected" : ""}>Denied</option>
         </select>
       </td>
-      <td class="no-print">
+      <td data-label="Actions" class="no-print">
         <div class="row-actions">
-          <button class="icon-btn" type="button" data-edit-id="${escapeHtml(col.id)}" title="Edit school">✏️</button>
-          <button class="icon-btn" type="button" data-delete-id="${escapeHtml(col.id)}" title="Remove school">🗑️</button>
+          <button class="icon-btn" type="button" data-edit-id="${escapeHtml(col.id)}" aria-label="Edit ${escapeHtml(col.school)}" title="Edit school">✏️</button>
+          <button class="icon-btn" type="button" data-delete-id="${escapeHtml(col.id)}" aria-label="Remove ${escapeHtml(col.school)}" title="Remove school">🗑️</button>
         </div>
       </td>
     `;
 
     tbody.appendChild(tr);
+  });
+
+  // Wire 1-click Submitted toggle button
+  tbody.querySelectorAll("[data-toggle-submit-id]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-toggle-submit-id");
+      const item = collegesList.find((c) => c.id === id);
+      if (!item) return;
+      if (item.submittedOn && item.submittedOn.trim() !== "") {
+        item.submittedOn = "";
+        showToast(`Marked ${item.school} as Not Submitted`);
+      } else {
+        const now = new Date();
+        item.submittedOn = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+        showToast(`✓ Marked ${item.school} submitted (${item.submittedOn})`);
+      }
+      saveColleges();
+      renderAll();
+    });
   });
 
   // Wire outcome dropdowns & edit/delete buttons
@@ -532,7 +635,7 @@ function renderCollegesTable() {
 
   tbody.querySelectorAll("[data-edit-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      openCollegeModal(btn.getAttribute("data-edit-id"));
+      openCollegeModal(btn.getAttribute("data-edit-id"), btn);
     });
   });
 
@@ -544,6 +647,7 @@ function renderCollegesTable() {
         collegesList = collegesList.filter((c) => c.id !== id);
         saveColleges();
         renderAll();
+        showToast(`Removed ${target.school}`);
       }
     });
   });
@@ -601,8 +705,17 @@ function createTaskElement(task) {
   return item;
 }
 
+function getCurrentSeasonKey() {
+  const m = new Date().getMonth(); // 0=Jan ... 11=Dec
+  if (m >= 7 && m <= 11) return "fall"; // Aug - Dec
+  if (m >= 0 && m <= 2) return "winter"; // Jan - Mar
+  return "spring"; // Apr - Jul
+}
+
 function renderChecklists() {
   const seasons = ["fall", "winter", "spring"];
+  const currentSeason = getCurrentSeasonKey();
+
   seasons.forEach((season) => {
     const container = document.getElementById(`list-${season}`);
     if (!container) return;
@@ -611,10 +724,25 @@ function renderChecklists() {
     const filtered = TIMELINE_TASKS.filter(
       (t) => t.season === season && matchesRole(t.owner)
     );
+    const doneCount = filtered.filter((t) => checkedState[t.id]).length;
 
     filtered.forEach((task) => {
       container.appendChild(createTaskElement(task));
     });
+
+    const tagEl = document.getElementById(`tag-${season}`);
+    const cardEl = document.getElementById(`season-card-${season}`);
+    const isCurrent = season === currentSeason;
+
+    if (cardEl) {
+      cardEl.classList.toggle("current-season", isCurrent);
+    }
+    if (tagEl) {
+      tagEl.classList.toggle("current-tag", isCurrent);
+      tagEl.textContent = isCurrent
+        ? `📍 Current · ${doneCount}/${filtered.length} Done`
+        : `${doneCount}/${filtered.length} Done`;
+    }
   });
 
   const gotchaContainer = document.getElementById("list-gotchas");
@@ -641,10 +769,12 @@ function updateProgress() {
   if (fillEl) fillEl.style.width = `${pct}%`;
 }
 
-function openCollegeModal(editId) {
+function openCollegeModal(editId, triggerEl) {
   const modal = document.getElementById("college-modal");
   const titleEl = document.getElementById("college-modal-title");
   if (!modal) return;
+
+  lastModalTrigger = triggerEl || document.activeElement;
 
   const existing = editId ? collegesList.find((c) => c.id === editId) : null;
   if (titleEl) {
@@ -690,6 +820,8 @@ function openCollegeModal(editId) {
 
   modal.classList.remove("hidden-section");
   modal.setAttribute("aria-hidden", "false");
+  const schoolInput = document.getElementById("col-school");
+  if (schoolInput) setTimeout(() => schoolInput.focus(), 20);
 }
 
 function closeCollegeModal() {
@@ -697,6 +829,9 @@ function closeCollegeModal() {
   if (modal) {
     modal.classList.add("hidden-section");
     modal.setAttribute("aria-hidden", "true");
+  }
+  if (lastModalTrigger && typeof lastModalTrigger.focus === "function") {
+    lastModalTrigger.focus();
   }
 }
 
@@ -790,13 +925,19 @@ function parseDelimitedLine(line, delimiter) {
   return result;
 }
 
-function importCollegesFromText(rawText) {
+function importCollegesFromText(rawText, removeSamplesFirst) {
   const lines = (rawText || "")
     .split(/\r?\n/)
     .map((l) => l.replace(/\r$/, ""))
     .filter((l) => l.trim() !== "");
 
   if (lines.length === 0) return 0;
+
+  if (removeSamplesFirst) {
+    collegesList = collegesList.filter(
+      (c) => !String(c.id || "").startsWith("col-sample-")
+    );
+  }
 
   const delimiter = lines[0].includes("\t") ? "\t" : ",";
   let importedCount = 0;
@@ -839,6 +980,7 @@ function importCollegesFromText(rawText) {
   if (importedCount > 0) {
     saveColleges();
     renderAll();
+    showToast(`✓ Imported ${importedCount} college${importedCount === 1 ? "" : "s"}`);
   }
   return importedCount;
 }
@@ -846,6 +988,7 @@ function importCollegesFromText(rawText) {
 function renderAll() {
   renderChecklists();
   updateProgress();
+  updateSampleDataBanner();
   renderCollegesTable();
   updateCollegeSummary();
 }
@@ -853,10 +996,22 @@ function renderAll() {
 function setupFilters() {
   // View Tabs
   const tabBtns = document.querySelectorAll("[data-tab]");
+  const roleFilterBar = document.getElementById("role-filter-bar");
+
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       activeTab = btn.getAttribute("data-tab");
-      tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
+      tabBtns.forEach((b) => {
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+
+      if (roleFilterBar) {
+        const showRoleFilter =
+          activeTab === "all" || activeTab === "timeline" || activeTab === "aid";
+        roleFilterBar.classList.toggle("hidden-section", !showRoleFilter);
+      }
 
       const sections = document.querySelectorAll("[data-section]");
       sections.forEach((sec) => {
@@ -875,7 +1030,11 @@ function setupFilters() {
   roleBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       activeRoleFilter = btn.getAttribute("data-role");
-      roleBtns.forEach((b) => b.classList.toggle("active", b === btn));
+      roleBtns.forEach((b) => {
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
       renderAll();
     });
   });
@@ -885,7 +1044,11 @@ function setupFilters() {
   tierBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       activeTierFilter = btn.getAttribute("data-tier-filter");
-      tierBtns.forEach((b) => b.classList.toggle("active", b === btn));
+      tierBtns.forEach((b) => {
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
       renderCollegesTable();
     });
   });
@@ -899,15 +1062,34 @@ function setupFilters() {
     });
   }
 
+  // Clear Sample Colleges Banner Button
+  const clearSamplesBtn = document.getElementById("btn-clear-samples");
+  if (clearSamplesBtn) {
+    clearSamplesBtn.addEventListener("click", () => {
+      collegesList = collegesList.filter(
+        (c) => !String(c.id || "").startsWith("col-sample-")
+      );
+      saveColleges();
+      renderAll();
+      showToast("Cleared example schools — ready for your list!");
+    });
+  }
+
   // Add / Edit College Modal Controls
+  const collegeModal = document.getElementById("college-modal");
   const addCollegeBtn = document.getElementById("btn-add-college");
   if (addCollegeBtn) {
-    addCollegeBtn.addEventListener("click", () => openCollegeModal(null));
+    addCollegeBtn.addEventListener("click", () => openCollegeModal(null, addCollegeBtn));
   }
   const closeCollegeBtn = document.getElementById("btn-close-college-modal");
   const cancelCollegeBtn = document.getElementById("btn-cancel-college");
   if (closeCollegeBtn) closeCollegeBtn.addEventListener("click", closeCollegeModal);
   if (cancelCollegeBtn) cancelCollegeBtn.addEventListener("click", closeCollegeModal);
+  if (collegeModal) {
+    collegeModal.addEventListener("click", (e) => {
+      if (e.target === collegeModal) closeCollegeModal();
+    });
+  }
 
   const collegeForm = document.getElementById("college-form");
   if (collegeForm) {
@@ -944,6 +1126,7 @@ function setupFilters() {
       saveColleges();
       closeCollegeModal();
       renderAll();
+      showToast(`Saved ${entry.school}`);
     });
   }
 
@@ -961,24 +1144,47 @@ function setupFilters() {
   const confirmImportBtn = document.getElementById("btn-confirm-import");
   const importTextarea = document.getElementById("import-textarea");
   const importFileInput = document.getElementById("import-file-input");
+  const importReplaceChk = document.getElementById("import-replace-samples");
 
   const closeImportModal = () => {
     if (importModal) {
       importModal.classList.add("hidden-section");
       importModal.setAttribute("aria-hidden", "true");
     }
+    if (lastModalTrigger && typeof lastModalTrigger.focus === "function") {
+      lastModalTrigger.focus();
+    }
   };
 
   if (openImportBtn && importModal) {
     openImportBtn.addEventListener("click", () => {
+      lastModalTrigger = openImportBtn;
       if (importTextarea) importTextarea.value = "";
       if (importFileInput) importFileInput.value = "";
       importModal.classList.remove("hidden-section");
       importModal.setAttribute("aria-hidden", "false");
+      if (importTextarea) setTimeout(() => importTextarea.focus(), 20);
     });
   }
   if (closeImportBtn) closeImportBtn.addEventListener("click", closeImportModal);
   if (cancelImportBtn) cancelImportBtn.addEventListener("click", closeImportModal);
+  if (importModal) {
+    importModal.addEventListener("click", (e) => {
+      if (e.target === importModal) closeImportModal();
+    });
+  }
+
+  // Global Escape key listener for modals
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (collegeModal && !collegeModal.classList.contains("hidden-section")) {
+        closeCollegeModal();
+      }
+      if (importModal && !importModal.classList.contains("hidden-section")) {
+        closeImportModal();
+      }
+    }
+  });
 
   if (importFileInput && importTextarea) {
     importFileInput.addEventListener("change", () => {
@@ -994,7 +1200,8 @@ function setupFilters() {
 
   if (confirmImportBtn && importTextarea) {
     confirmImportBtn.addEventListener("click", () => {
-      const count = importCollegesFromText(importTextarea.value);
+      const removeSamples = importReplaceChk ? importReplaceChk.checked : true;
+      const count = importCollegesFromText(importTextarea.value, removeSamples);
       if (count > 0) {
         closeImportModal();
       } else {
@@ -1011,6 +1218,7 @@ function setupFilters() {
         collegesList = JSON.parse(JSON.stringify(DEFAULT_COLLEGES));
         saveColleges();
         renderAll();
+        showToast("Restored 3 example schools");
       }
     });
   }
@@ -1023,6 +1231,7 @@ function setupFilters() {
         checkedState = {};
         saveState();
         renderAll();
+        showToast("Checklist progress reset");
       }
     });
   }
@@ -1032,6 +1241,31 @@ function setupFilters() {
   if (printBtn) {
     printBtn.addEventListener("click", () => {
       window.print();
+    });
+  }
+
+  // Dark / Light Mode Toggle Button
+  const themeBtn = document.getElementById("btn-theme-toggle");
+  const updateThemeBtnLabel = () => {
+    if (!themeBtn) return;
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    themeBtn.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+    themeBtn.setAttribute(
+      "aria-label",
+      isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
+  };
+  updateThemeBtnLabel();
+
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("sinthima_theme_v1", next);
+      } catch (e) {}
+      updateThemeBtnLabel();
     });
   }
 

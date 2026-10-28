@@ -3,7 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Senior Year College &amp; Financial Aid Visual Roadmap</title>
+  <title>College Spector</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("sinthima_theme_v1");
+        var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var theme = saved || (prefersDark ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -13,13 +23,17 @@
       <div class="hero-top">
         <div>
           <span class="badge-pill">High School Senior Parent Guide</span>
-          <h1>College Application &amp; Financial Aid Roadmap</h1>
+          <h1>College Spector</h1>
+          <div class="hero-subtitle">Senior Year College &amp; Financial Aid Visual Roadmap</div>
           <p>
-            No walls of text—just the critical dates, visual financial aid breakdowns,
-            FAFSA traps to avoid, and interactive checklists for parents and seniors.
+            Critical dates, visual financial aid breakdowns,
+            FAFSA gotchas, and interactive checklists for parents and seniors.
           </p>
         </div>
         <div class="hero-actions">
+          <button id="btn-theme-toggle" class="btn btn-outline-light" type="button" aria-label="Toggle dark mode">
+            🌙 Dark Mode
+          </button>
           <button id="btn-print" class="btn btn-light" type="button">
             🖨️ Print / Save PDF Checklist
           </button>
@@ -48,21 +62,21 @@
   </header>
 
   <!-- Sticky Filter & View Navigation -->
-  <nav class="sticky-nav">
+  <nav class="sticky-nav" aria-label="Section and role filters">
     <div class="container nav-inner">
-      <div class="view-tabs" role="tablist">
-        <button class="tab-btn active" data-tab="all" type="button">All Sections</button>
-        <button class="tab-btn" data-tab="timeline" type="button">📅 Timeline &amp; Checklists</button>
-        <button class="tab-btn" data-tab="planner" type="button">🏫 College Planner</button>
-        <button class="tab-btn" data-tab="aid" type="button">💰 Financial Aid &amp; FAFSA</button>
-        <button class="tab-btn" data-tab="strategy" type="button">🎯 Admissions Strategy</button>
+      <div class="view-tabs" role="tablist" aria-label="Roadmap sections">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="all" type="button">All Sections</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="timeline" type="button">📅 Timeline &amp; Checklists</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="planner" type="button">🏫 College Planner</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="aid" type="button">💰 Financial Aid &amp; FAFSA</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="strategy" type="button">🎯 Admissions Strategy</button>
       </div>
 
-      <div class="role-filter">
+      <div id="role-filter-bar" class="role-filter">
         <span>Filter Tasks:</span>
-        <button class="role-chip active" data-role="all" type="button">Everyone</button>
-        <button class="role-chip" data-role="parent" type="button">Parent Tasks</button>
-        <button class="role-chip" data-role="student" type="button">Student Tasks</button>
+        <button class="role-chip active" aria-pressed="true" data-role="all" type="button">Everyone</button>
+        <button class="role-chip" aria-pressed="false" data-role="parent" type="button">Parent Tasks</button>
+        <button class="role-chip" aria-pressed="false" data-role="student" type="button">Student Tasks</button>
       </div>
     </div>
   </nav>
@@ -118,28 +132,28 @@
       <!-- 3 Seasonal Columns -->
       <div class="timeline-grid">
         <!-- Fall -->
-        <div class="season-card season-fall">
+        <div id="season-card-fall" class="season-card season-fall">
           <div class="season-header">
             <span class="season-title">🍂 Sept – Dec: Apply &amp; Launch Aid</span>
-            <span class="season-tag">Fall Senior Year</span>
+            <span id="tag-fall" class="season-tag">Fall Senior Year</span>
           </div>
           <div id="list-fall" class="checklist-items"></div>
         </div>
 
         <!-- Winter -->
-        <div class="season-card season-winter">
+        <div id="season-card-winter" class="season-card season-winter">
           <div class="season-header">
             <span class="season-title">❄️ Jan – Mar: Aid Deadlines &amp; Offers</span>
-            <span class="season-tag">Winter Senior Year</span>
+            <span id="tag-winter" class="season-tag">Winter Senior Year</span>
           </div>
           <div id="list-winter" class="checklist-items"></div>
         </div>
 
         <!-- Spring -->
-        <div class="season-card season-spring">
+        <div id="season-card-spring" class="season-card season-spring">
           <div class="season-header">
             <span class="season-title">🌱 Apr – May: Compare &amp; Commit</span>
-            <span class="season-tag">Spring Senior Year</span>
+            <span id="tag-spring" class="season-tag">Spring Senior Year</span>
           </div>
           <div id="list-spring" class="checklist-items"></div>
         </div>
@@ -169,6 +183,20 @@
             ↺ Reset Sample
           </button>
         </div>
+      </div>
+
+      <!-- Sample Data Onboarding Banner -->
+      <div id="sample-data-banner" class="sample-banner">
+        <div class="sample-banner-text">
+          <span>👀</span>
+          <div>
+            <strong>Viewing 3 example colleges</strong> so you can see how the tracker works.
+            Click any <em>Not Submitted</em> badge to toggle status, or clear the examples to start your family's list.
+          </div>
+        </div>
+        <button id="btn-clear-samples" class="btn btn-clear-samples" type="button">
+          🧹 Clear Examples &amp; Start My List
+        </button>
       </div>
 
       <!-- Portfolio Summary Bar -->
@@ -365,7 +393,7 @@
 
           <div class="helpline-banner">
             <span>📞 Stuck on FAFSA or FSA ID verification? Ask for help:</span>
-            <span class="helpline-number">1-800-4-FED-AID (1-800-433-3243)</span>
+            <a href="tel:18004333243" class="helpline-number">1-800-4-FED-AID (1-800-433-3243)</a>
           </div>
         </div>
 
@@ -554,10 +582,10 @@
 
   <!-- Modal: Add / Edit College -->
   <div id="college-modal" class="modal-backdrop hidden-section" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-labelledby="college-modal-title">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="college-modal-title">
       <div class="modal-header">
         <h3 id="college-modal-title">Add / Edit College</h3>
-        <button id="btn-close-college-modal" class="modal-close" type="button" aria-label="Close">✕</button>
+        <button id="btn-close-college-modal" class="modal-close" type="button" aria-label="Close dialog">✕</button>
       </div>
       <form id="college-form" class="modal-form">
         <input type="hidden" id="col-id" />
@@ -665,10 +693,10 @@
 
   <!-- Modal: Paste / Import from Google Sheets or CSV -->
   <div id="import-modal" class="modal-backdrop hidden-section" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-labelledby="import-modal-title">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
       <div class="modal-header">
         <h3 id="import-modal-title">📋 Paste from Google Sheets or Import CSV</h3>
-        <button id="btn-close-import-modal" class="modal-close" type="button" aria-label="Close">✕</button>
+        <button id="btn-close-import-modal" class="modal-close" type="button" aria-label="Close dialog">✕</button>
       </div>
       <div class="modal-body">
         <p class="aid-summary">
@@ -685,6 +713,10 @@
           <label for="import-file-input" class="toolbar-label">Or choose a CSV/TSV file:</label>
           <input id="import-file-input" type="file" accept=".csv,.tsv,.txt" />
         </div>
+        <label class="import-replace-row" for="import-replace-samples">
+          <input id="import-replace-samples" type="checkbox" checked />
+          <span>Remove the 3 example schools before importing my list</span>
+        </label>
       </div>
       <div class="modal-footer">
         <button id="btn-cancel-import" class="btn btn-secondary" type="button">Cancel</button>
@@ -692,6 +724,8 @@
       </div>
     </div>
   </div>
+
+  <div id="toast-banner" class="toast-banner hidden-section" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>
